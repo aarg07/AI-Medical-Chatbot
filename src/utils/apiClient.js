@@ -1,6 +1,8 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000'
+
 export const getAIResponse = async (conversationHistory) => {
   try {
-    const response = await fetch('http://127.0.0.1:5000/api/chat', {
+    const response = await fetch(`${API_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +25,7 @@ export const getAIResponse = async (conversationHistory) => {
 
 export const analyzeMedicalReport = async (messages) => {
   try {
-    const response = await fetch('http://127.0.0.1:5000/api/analyze-report', {
+    const response = await fetch(`${API_BASE_URL}/api/analyze-report`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
