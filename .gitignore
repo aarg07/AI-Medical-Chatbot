@@ -26,6 +26,8 @@ dist-ssr
 .env.*
 ! .env.example
 scratch/
+backend/uploads/
+*.traineddata
 api-run.err
 api-run.log
 vite-dev.err

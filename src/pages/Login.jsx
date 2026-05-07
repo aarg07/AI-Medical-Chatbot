@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, LockKeyhole, Mail, ShieldCheck, User } from 'lucide-react'
+import { ArrowRight, LockKeyhole, Mail, ShieldCheck, User as UserIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { apiClient } from '../utils/apiClient'
 
 const trustPoints = [
-  'Private local session stored only in your browser',
-  'Fast emergency assistant with image and voice support',
-  'Built-in safety references, protocols, and preparedness pages',
+  'Secure MongoDB storage for your chat history',
+  'Fast emergency assistant with India-specific (100) protocols',
+  'AI-powered medical report analysis and guidance',
 ]
 
 export default function Login({ onLogin }) {
+  const [isRegister, setIsRegister] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('Student responder')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -21,21 +25,50 @@ export default function Login({ onLogin }) {
     }
   }, [navigate])
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setError('')
+    setLoading(true)
 
-    if (!name.trim() || !email.trim()) {
-      setError('Enter your name and email to continue.')
+    if (!email.trim() || !password.trim()) {
+      setError('Please fill in all required fields.')
+      setLoading(false)
       return
     }
 
-    onLogin({
-      email: email.trim(),
-      name: name.trim(),
-      role,
-    })
+    if (isRegister) {
+      if (!name.trim()) {
+        setError('Please enter your full name.')
+        setLoading(false)
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
+        setLoading(false)
+        return
+      }
+    }
 
-    navigate('/dashboard', { replace: true })
+    try {
+      if (isRegister) {
+        await apiClient.register({ name, email, password })
+        setIsRegister(false)
+        setError('Registration successful! Please login.')
+      } else {
+        const data = await apiClient.login({ email, password })
+        onLogin({
+          token: data.token,
+          email: data.user.email,
+          name: data.user.name,
+          isAdmin: data.user.isAdmin,
+        })
+        navigate('/dashboard', { replace: true })
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -45,24 +78,24 @@ export default function Login({ onLogin }) {
         <div className="relative max-w-xl">
           <p className="text-sm font-semibold uppercase tracking-[0.32em] text-red-200">Emergency companion</p>
           <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-6xl bg-gradient-to-br from-white to-red-200 bg-clip-text text-transparent drop-shadow-sm">
-            A sharper front end for your AI first-aid project.
+            Authenticated AI Medical Assistant.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-8 text-slate-200 sm:text-lg">
-            Sign in to enter a calmer, cleaner response workspace with guided protocols, emergency tips, and a polished assistant experience.
+            Access your secure workspace with saved chat history and persistent medical report analysis.
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             <div className="glass-stat">
-              <span className="glass-stat__value">6+</span>
-              <span className="glass-stat__label">Core pages</span>
+              <span className="glass-stat__value">DB</span>
+              <span className="glass-stat__label">Persistent</span>
             </div>
             <div className="glass-stat">
-              <span className="glass-stat__value">24/7</span>
-              <span className="glass-stat__label">Reference ready</span>
+              <span className="glass-stat__value">100</span>
+              <span className="glass-stat__label">India Ready</span>
             </div>
             <div className="glass-stat">
               <span className="glass-stat__value">AI</span>
-              <span className="glass-stat__label">Text, voice, image</span>
+              <span className="glass-stat__label">Dual Model</span>
             </div>
           </div>
 
@@ -72,8 +105,8 @@ export default function Login({ onLogin }) {
                 <ShieldCheck className="h-6 w-6 text-red-200" />
               </div>
               <div>
-                <p className="font-semibold">Designed for demos, students, and rapid emergency guidance</p>
-                <p className="text-sm text-slate-300">Use the assistant for structured first-response instructions while keeping official services one tap away.</p>
+                <p className="font-semibold">Designed for rapid emergency guidance in India</p>
+                <p className="text-sm text-slate-300">Call 100 for immediate help. Our AI provides simple remedies and safety steps while you wait.</p>
               </div>
             </div>
 
@@ -93,33 +126,39 @@ export default function Login({ onLogin }) {
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
             <LockKeyhole className="h-3.5 w-3.5" />
-            Secure local login
+            {isRegister ? 'Create an account' : 'Secure user login'}
           </div>
-          <h2 className="mt-5 text-3xl font-semibold text-slate-900 dark:text-white">Enter the response console</h2>
+          <h2 className="mt-5 text-3xl font-semibold text-slate-900 dark:text-white">
+            {isRegister ? 'Start your journey' : 'Enter the response console'}
+          </h2>
           <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-            This login is lightweight by design. It personalizes the project and unlocks the full navigation flow.
+            {isRegister 
+              ? 'Join the medical companion platform for persistent data access.' 
+              : 'Log in to access your saved reports and chat history.'}
           </p>
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-200">
+            <div className={`rounded-2xl border px-4 py-3 text-sm font-medium ${error.includes('successful') ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
               {error}
             </div>
           )}
 
-          <label className="field-block">
-            <span className="field-label">Full name</span>
-            <span className="field-input">
-              <User className="h-4 w-4 text-slate-400" />
-              <input
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Enter your full name"
-                value={name}
-                className="w-full bg-transparent outline-none placeholder:text-slate-500"
-              />
-            </span>
-          </label>
+          {isRegister && (
+            <label className="field-block">
+              <span className="field-label">Full name</span>
+              <span className="field-input">
+                <UserIcon className="h-4 w-4 text-slate-400" />
+                <input
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Enter your full name"
+                  value={name}
+                  className="w-full bg-transparent outline-none placeholder:text-slate-500"
+                />
+              </span>
+            </label>
+          )}
 
           <label className="field-block">
             <span className="field-label">Email</span>
@@ -130,28 +169,60 @@ export default function Login({ onLogin }) {
                 placeholder="name@example.com"
                 type="email"
                 value={email}
+                className="w-full bg-transparent outline-none placeholder:text-slate-500"
               />
             </span>
           </label>
 
           <label className="field-block">
-            <span className="field-label">Use case</span>
-            <select
-              className="field-select"
-              onChange={(event) => setRole(event.target.value)}
-              value={role}
-            >
-              <option>Student responder</option>
-              <option>College project reviewer</option>
-              <option>Teacher or mentor</option>
-              <option>General user</option>
-            </select>
+            <span className="field-label">Password</span>
+            <span className="field-input">
+              <LockKeyhole className="h-4 w-4 text-slate-400" />
+              <input
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Password"
+                type="password"
+                value={password}
+                className="w-full bg-transparent outline-none placeholder:text-slate-500"
+              />
+            </span>
           </label>
 
-          <button className="primary-button w-full justify-center" type="submit">
-            <span>Launch dashboard</span>
+          {isRegister && (
+            <label className="field-block">
+              <span className="field-label">Confirm Password</span>
+              <span className="field-input">
+                <LockKeyhole className="h-4 w-4 text-slate-400" />
+                <input
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Confirm password"
+                  type="password"
+                  value={confirmPassword}
+                  className="w-full bg-transparent outline-none placeholder:text-slate-500"
+                />
+              </span>
+            </label>
+          )}
+
+          <button 
+            className="primary-button w-full justify-center disabled:opacity-50" 
+            type="submit"
+            disabled={loading}
+          >
+            <span>{loading ? 'Processing...' : (isRegister ? 'Register' : 'Launch dashboard')}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
+
+          <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              type="button"
+              className="font-semibold text-red-600 hover:underline dark:text-red-400"
+              onClick={() => setIsRegister(!isRegister)}
+            >
+              {isRegister ? 'Login here' : 'Register here'}
+            </button>
+          </div>
         </form>
       </section>
     </div>

@@ -1,0 +1,19 @@
+[AI] Gemini failed (gemini-2.5-flash): fetch failed
+[AI] Gemini failed (gemini-2.0-flash): fetch failed
+[AI] Gemini failed (gemini-2.0-flash-lite): fetch failed
+[AI] Gemini failed (gemini-flash-lite-latest): fetch failed
+[AI] Grok failed: fetch failed
+[REPORT] AI analysis failed: TypeError: fetch failed
+    at node:internal/deps/undici/undici:16416:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async callGrok (file:///C:/Users/amang/OneDrive/Desktop/AI%20Project/backend/server.mjs:502:20)
+    at async callAIWithFallback (file:///C:/Users/amang/OneDrive/Desktop/AI%20Project/backend/server.mjs:555:14)
+    at async file:///C:/Users/amang/OneDrive/Desktop/AI%20Project/backend/server.mjs:1028:22 {
+  [cause]: Error: getaddrinfo ENOTFOUND api.x.ai
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'api.x.ai'
+  }
+}
