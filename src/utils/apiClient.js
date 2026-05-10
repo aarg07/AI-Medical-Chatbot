@@ -8,6 +8,27 @@ const getAuthHeaders = () => {
   return user.token ? { 'Authorization': `Bearer ${user.token}` } : {}
 }
 
+const handleResponse = async (res) => {
+  const contentType = res.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    const payload = await res.json()
+    if (!res.ok) {
+      throw new Error(payload.error || `Server Error (${res.status})`)
+    }
+    return payload
+  }
+  
+  // Handle non-JSON responses (usually HTML error pages)
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error(`API Endpoint not found (404). Please check your VITE_API_BASE_URL. Current: ${API_BASE_URL || '(current origin)'}`)
+    }
+    throw new Error(`Server returned non-JSON response (${res.status}). Check server logs.`)
+  }
+  
+  throw new Error('Expected JSON response but received something else.')
+}
+
 export const apiClient = {
   async register(data) {
     console.log('Registering user:', data.email)
@@ -16,12 +37,7 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    const payload = await res.json()
-    if (!res.ok) {
-      console.error('Registration failed:', payload)
-      throw new Error(payload.error || 'Registration failed')
-    }
-    return payload
+    return handleResponse(res)
   },
 
   async login(data) {
@@ -31,12 +47,7 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    const payload = await res.json()
-    if (!res.ok) {
-      console.error('Login failed:', payload)
-      throw new Error(payload.error || 'Login failed')
-    }
-    return payload
+    return handleResponse(res)
   },
 
   async chat(messages) {
@@ -50,13 +61,7 @@ export const apiClient = {
       body: JSON.stringify({ messages })
     })
     
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({ error: 'Server error' }))
-      console.error('Chat API error:', payload)
-      throw new Error(payload.error || `Server error (${res.status})`)
-    }
-    
-    const payload = await res.json()
+    const payload = await handleResponse(res)
     console.log('Chat API response:', {
       hasReply: Boolean(payload.reply),
       mode: payload.mode
@@ -79,13 +84,7 @@ export const apiClient = {
       body: formData
     })
     
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({ error: 'Analysis failed' }))
-      console.error('Report Analysis API error:', payload)
-      throw new Error(payload.error || `Analysis failed (${res.status})`)
-    }
-    
-    const payload = await res.json()
+    const payload = await handleResponse(res)
     console.log('Report Analysis API response:', {
       hasAnalysis: Boolean(payload.analysis),
       ocrLength: payload.ocrText?.length || 0,
@@ -99,9 +98,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch history')
-    return payload
+    return handleResponse(res)
   },
 
   async getAdminSummary() {
@@ -109,9 +106,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch admin summary')
-    return payload
+    return handleResponse(res)
   },
 
   async searchAdminUsers(query = '') {
@@ -119,9 +114,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch users')
-    return payload
+    return handleResponse(res)
   },
 
   async updateAdminUser(userId, data) {
@@ -133,9 +126,7 @@ export const apiClient = {
       },
       body: JSON.stringify(data)
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to update user')
-    return payload
+    return handleResponse(res)
   },
 
   async deleteAdminUser(userId) {
@@ -143,9 +134,7 @@ export const apiClient = {
       method: 'DELETE',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to delete user')
-    return payload
+    return handleResponse(res)
   },
 
   async getAdminChats(query = '', page = 1) {
@@ -153,9 +142,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch chats')
-    return payload
+    return handleResponse(res)
   },
 
   async getAdminReports(page = 1) {
@@ -163,9 +150,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch reports')
-    return payload
+    return handleResponse(res)
   },
 
   async getAdminEmergencies() {
@@ -173,9 +158,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch emergencies')
-    return payload
+    return handleResponse(res)
   },
 
   async getAdminAnalytics() {
@@ -183,9 +166,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch analytics')
-    return payload
+    return handleResponse(res)
   },
 
   async getAdminLogs() {
@@ -193,9 +174,7 @@ export const apiClient = {
       method: 'GET',
       headers: getAuthHeaders()
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to fetch logs')
-    return payload
+    return handleResponse(res)
   },
 
   async sendAdminNotification(data) {
@@ -207,9 +186,7 @@ export const apiClient = {
       },
       body: JSON.stringify(data)
     })
-    const payload = await res.json()
-    if (!res.ok) throw new Error(payload.error || 'Failed to send notification')
-    return payload
+    return handleResponse(res)
   }
 }
 
