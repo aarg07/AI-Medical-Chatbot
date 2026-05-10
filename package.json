@@ -8,6 +8,7 @@
     "backend": "node backend/server.mjs",
     "dev:all": "npx concurrently \"npm run dev\" \"npm run backend\"",
     "build": "vite build",
+    "start": "node backend/server.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

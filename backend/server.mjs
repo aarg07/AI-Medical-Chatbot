@@ -1070,8 +1070,15 @@ app.post('/api/analyze-report', upload.single('report'), asyncHandler(async (req
   }
 }))
 
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' })
+// Serve static files from the frontend build directory
+app.use(express.static(join(rootDir, 'dist')))
+
+// SPA fallback: for any non-API route that isn't a static file, serve index.html
+app.get(/.*/, (req, res) => {
+  if (req.originalUrl.startsWith('/api/') || req.originalUrl === '/health') {
+    return res.status(404).json({ error: 'API endpoint not found' })
+  }
+  res.sendFile(join(rootDir, 'dist', 'index.html'))
 })
 
 app.use((error, _req, res, _next) => {
