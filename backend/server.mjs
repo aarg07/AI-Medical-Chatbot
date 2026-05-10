@@ -38,22 +38,27 @@ const { recognize } = tesseract
 const PORT = Number(process.env.PORT || 5000)
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/medical_chatbot'
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
-const ALLOWED_ORIGIN = process.env.CLIENT_ORIGIN || '*'
+const ALLOWED_ORIGINS = (process.env.CLIENT_ORIGIN || '*')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean)
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || DEFAULT_ADMIN_EMAIL)
   .split(',')
   .map(email => email.trim().toLowerCase())
   .filter(Boolean)
 
 app.use(cors({
-  origin: ALLOWED_ORIGIN,
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: ALLOWED_ORIGINS.length === 1 && ALLOWED_ORIGINS[0] === '*' ? '*' : ALLOWED_ORIGINS,
+  methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 app.use(express.json({ limit: '12mb' }))
 
 mongoose.connect(MONGODB_URI)
   .then(async () => {
-    console.log('Connected to MongoDB')
+    const isAtlas = MONGODB_URI.includes('mongodb+srv')
+    console.log(`Connected to MongoDB (${isAtlas ? 'Cloud Atlas' : 'Local'})`)
     const results = await Promise.allSettled([
       Chat.syncIndexes(),
       Report.syncIndexes(),
@@ -62,9 +67,15 @@ mongoose.connect(MONGODB_URI)
     results.forEach((result) => {
       if (result.status === 'rejected') console.error('MongoDB index sync failed:', result.reason)
     })
-    console.log('MongoDB indexes ready: chats/reports are retained until manually deleted')
+    console.log('MongoDB indexes ready')
   })
-  .catch(err => console.error('MongoDB connection error:', err))
+  .catch(err => {
+    console.error('CRITICAL: MongoDB connection error!')
+    console.error('Error Details:', err.message)
+    if (MONGODB_URI.includes('mongodb+srv')) {
+      console.error('Tip: Ensure your IP is whitelisted in MongoDB Atlas Network Access.')
+    }
+  })
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
