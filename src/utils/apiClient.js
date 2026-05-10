@@ -3,6 +3,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isDev ? 'http://127.0
 console.log(`[API Client] Mode: ${isDev ? 'Development' : 'Production'}`)
 console.log('[API Client] Using base URL:', API_BASE_URL || '(current origin)')
 
+const fetchWithLog = async (path, options) => {
+  const url = `${API_BASE_URL}${path}`
+  console.log(`[API Client] Fetching: ${options?.method || 'GET'} ${url}`)
+  return fetch(url, options)
+}
+
 const getAuthHeaders = () => {
   const user = JSON.parse(localStorage.getItem('emergencyGuideUser') || '{}')
   return user.token ? { 'Authorization': `Bearer ${user.token}` } : {}
@@ -32,7 +38,7 @@ const handleResponse = async (res) => {
 export const apiClient = {
   async register(data) {
     console.log('Registering user:', data.email)
-    const res = await fetch(`${API_BASE_URL}/api/register`, {
+    const res = await fetchWithLog('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -42,7 +48,7 @@ export const apiClient = {
 
   async login(data) {
     console.log('Logging in user:', data.email)
-    const res = await fetch(`${API_BASE_URL}/api/login`, {
+    const res = await fetchWithLog('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -52,7 +58,7 @@ export const apiClient = {
 
   async chat(messages) {
     console.log('Sending chat messages:', messages.length)
-    const res = await fetch(`${API_BASE_URL}/api/chat`, {
+    const res = await fetchWithLog('/api/chat', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -78,7 +84,7 @@ export const apiClient = {
     const formData = new FormData()
     formData.append('report', file)
 
-    const res = await fetch(`${API_BASE_URL}/api/analyze-report`, {
+    const res = await fetchWithLog('/api/analyze-report', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: formData
@@ -94,7 +100,7 @@ export const apiClient = {
   },
 
   async getHistory() {
-    const res = await fetch(`${API_BASE_URL}/api/history`, {
+    const res = await fetchWithLog('/api/history', {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -102,7 +108,7 @@ export const apiClient = {
   },
 
   async getAdminSummary() {
-    const res = await fetch(`${API_BASE_URL}/api/admin/summary`, {
+    const res = await fetchWithLog('/api/admin/summary', {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -110,7 +116,7 @@ export const apiClient = {
   },
 
   async searchAdminUsers(query = '') {
-    const res = await fetch(`${API_BASE_URL}/api/admin/users?q=${encodeURIComponent(query)}`, {
+    const res = await fetchWithLog(`/api/admin/users?q=${encodeURIComponent(query)}`, {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -118,7 +124,7 @@ export const apiClient = {
   },
 
   async updateAdminUser(userId, data) {
-    const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+    const res = await fetchWithLog(`/api/admin/users/${userId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +136,7 @@ export const apiClient = {
   },
 
   async deleteAdminUser(userId) {
-    const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+    const res = await fetchWithLog(`/api/admin/users/${userId}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     })
@@ -138,7 +144,7 @@ export const apiClient = {
   },
 
   async getAdminChats(query = '', page = 1) {
-    const res = await fetch(`${API_BASE_URL}/api/admin/chats?q=${encodeURIComponent(query)}&page=${page}`, {
+    const res = await fetchWithLog(`/api/admin/chats?q=${encodeURIComponent(query)}&page=${page}`, {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -146,7 +152,7 @@ export const apiClient = {
   },
 
   async getAdminReports(page = 1) {
-    const res = await fetch(`${API_BASE_URL}/api/admin/reports?page=${page}`, {
+    const res = await fetchWithLog(`/api/admin/reports?page=${page}`, {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -154,7 +160,7 @@ export const apiClient = {
   },
 
   async getAdminEmergencies() {
-    const res = await fetch(`${API_BASE_URL}/api/admin/emergencies`, {
+    const res = await fetchWithLog('/api/admin/emergencies', {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -162,7 +168,7 @@ export const apiClient = {
   },
 
   async getAdminAnalytics() {
-    const res = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
+    const res = await fetchWithLog('/api/admin/analytics', {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -170,7 +176,7 @@ export const apiClient = {
   },
 
   async getAdminLogs() {
-    const res = await fetch(`${API_BASE_URL}/api/admin/logs`, {
+    const res = await fetchWithLog('/api/admin/logs', {
       method: 'GET',
       headers: getAuthHeaders()
     })
@@ -178,7 +184,7 @@ export const apiClient = {
   },
 
   async sendAdminNotification(data) {
-    const res = await fetch(`${API_BASE_URL}/api/admin/notifications`, {
+    const res = await fetchWithLog('/api/admin/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
